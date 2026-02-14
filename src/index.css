@@ -1,0 +1,254 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+
+  /* Global Root Variables */
+  :root,
+  html[data-theme="light"] {
+    color-scheme: light;
+    --app-bg: #ffffff;
+    --app-text: #0f172a;
+    /* Slate 900 */
+    --app-text-muted: #475569;
+    /* Slate 600 */
+
+    --card-bg: rgba(255, 255, 255, 0.7);
+    --card-border: rgba(0, 0, 0, 0.05);
+    /* Slate 200 */
+
+    --sidebar-bg: #f8fafc;
+    --sidebar-text: #64748b;
+    /* Slate 500 */
+    --sidebar-active-bg: #eff6ff;
+    /* Blue 50 */
+    --sidebar-active-text: #2563eb;
+    /* Blue 600 */
+
+    --header-bg: #1e293b;
+    /* Slate 800 */
+    --logo-glow-color: rgba(99, 102, 241, 0.5);
+    /* Indigo glow for light */
+  }
+
+  /* Dark Theme Overrides */
+  html[data-theme="dark"] {
+    color-scheme: dark;
+    --app-bg: #020617;
+    /* Extra deep Slate 950 */
+    --app-text: #f1f5f9;
+    /* Slate 100 */
+    --app-text-muted: #94a3b8;
+    /* Slate 400 */
+
+    --card-bg: rgba(30, 41, 59, 0.7);
+    /* Slate 800 - Transparent */
+    --card-border: rgba(51, 65, 85, 0.5);
+    /* Slate 700 */
+    --logo-glow-color: #818cf8;
+    /* Bright indigo glow for dark */
+
+    --sidebar-bg: rgba(15, 23, 42, 0.5);
+    /* Slate 950 alpha */
+    --sidebar-text: #94a3b8;
+    /* Slate 400 */
+    --sidebar-active-bg: rgba(37, 99, 235, 0.1);
+    /* Blue 600 alpha */
+    --sidebar-active-text: #60a5fa;
+    /* Blue 400 */
+
+    --header-bg: #020617;
+    /* Slate 950 pure */
+  }
+
+  body {
+    background-color: var(--app-bg) !important;
+    color: var(--app-text) !important;
+    @apply antialiased transition-all duration-300;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+}
+
+@layer components {
+
+  /* Global Card System */
+  .card {
+    background-color: var(--card-bg);
+    border-color: var(--card-border);
+    color: var(--app-text);
+    backdrop-filter: blur(12px) saturate(120%);
+    -webkit-backdrop-filter: blur(12px) saturate(120%);
+    @apply rounded-2xl p-4 md:p-6 border transition-all duration-500;
+    box-shadow:
+      0 10px 30px -10px rgba(0, 0, 0, 0.12),
+      0 0 8px -4px var(--sidebar-active-text);
+    opacity: 0.98;
+  }
+
+  .card:hover {
+    box-shadow:
+      0 15px 40px -12px rgba(0, 0, 0, 0.2),
+      0 0 15px -4px var(--sidebar-active-text);
+    @apply -translate-y-1;
+  }
+
+  /* Global Input System */
+  .input {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-color: var(--card-border);
+    color: var(--app-text);
+    @apply w-full min-h-[48px] px-4 py-3 rounded-2xl border transition-all duration-300;
+    @apply focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500;
+    @apply text-base appearance-none;
+
+    html[data-theme="light"] & {
+      background-color: rgba(0, 0, 0, 0.02);
+    }
+  }
+
+  select.input {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1.25rem;
+    padding-right: 2.5rem;
+    cursor: pointer;
+  }
+
+  select.input option {
+    background-color: var(--app-bg);
+    color: var(--app-text);
+    padding: 12px;
+  }
+
+  /* Global Sidebar link system */
+  .sidebar {
+    background-color: var(--sidebar-bg);
+    border-color: var(--card-border);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    @apply w-64 border-r transition-all duration-300 min-h-screen sticky top-0;
+  }
+
+  .logo-glow {
+    filter: drop-shadow(0 0 8px var(--logo-glow-color));
+    transition: all 0.3s ease;
+  }
+
+  .logo-glow:hover {
+    filter: drop-shadow(0 0 15px var(--logo-glow-color));
+    transform: scale(1.05);
+  }
+
+  .animate-fadeIn {
+    animation: fadeIn 0.5s ease-out forwards;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .sidebar-link {
+    color: var(--sidebar-text);
+    @apply flex items-center space-x-4 px-4 py-3.5 rounded-2xl transition-all duration-300 font-medium;
+  }
+
+  .sidebar-link:hover {
+    @apply bg-gray-200/50 -translate-y-0.5 shadow-sm;
+
+    html[data-theme="dark"] & {
+      @apply bg-white/10;
+    }
+  }
+
+  .sidebar-link.active {
+    background-color: var(--sidebar-active-bg);
+    color: var(--sidebar-active-text);
+    @apply font-bold shadow-md ring-1 ring-primary-500/20 translate-x-1;
+    background: linear-gradient(to right, var(--sidebar-active-bg), transparent);
+  }
+
+  /* Mobile Bottom Navigation */
+  .bottom-nav {
+    background-color: var(--card-bg);
+    border-color: var(--card-border);
+    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
+    @apply fixed bottom-0 left-0 right-0 border-t flex items-center justify-around h-16 md:hidden transition-all duration-300;
+    padding-bottom: env(safe-area-inset-bottom);
+    z-index: 50;
+  }
+
+  .animate-slideDown {
+    animation: slideDown 0.3s ease-out forwards;
+  }
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .btn {
+    @apply flex items-center justify-center space-x-2 px-6 py-3 rounded-2xl font-bold transition-all duration-300;
+    @apply active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-0.5;
+  }
+
+  .btn-primary {
+    @apply bg-primary-600 text-white hover:bg-primary-700 shadow-md hover:shadow-lg;
+  }
+
+  .btn-secondary {
+    background-color: var(--card-border);
+    color: var(--app-text);
+    @apply hover:opacity-90;
+  }
+}
+
+/* Accessibility & Utils */
+@layer utilities {
+  .opacity-muted {
+    opacity: 0.7;
+  }
+
+  /* FAB - Floating Action Button */
+  .fab {
+    @apply fixed right-6 bottom-24 md:bottom-8 w-14 h-14 bg-primary-600 text-white rounded-2xl shadow-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 z-40;
+    box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.4);
+  }
+
+  .fab:hover {
+    @apply bg-primary-700 shadow-primary-500/40;
+  }
+
+  .animate-fadeIn {
+    animation: fadeIn 0.3s ease-out forwards;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}

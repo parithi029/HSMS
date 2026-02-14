@@ -1,0 +1,235 @@
+# Homeless Shelter HMIS Web App – Full Build Specification (Mobile-First, FY 2026 Compliant)
+
+## 1. Project Overview & Guiding Principles
+
+This system is designed specifically for small-to-medium nonprofit shelters that need a lightweight, high-performance alternative to "enterprise-bloat" HMIS software. Our mission is to reduce the administrative burden on front-line staff so they can focus on what truly matters: supporting people in crisis. By prioritizing a mobile-first approach, we empower staff to perform intakes and check-ins directly on the floor or in the field, rather than being tethered to a desktop.
+
+The primary users are shelter staff and volunteers who may have varying levels of technical proficiency and are often operating in high-stress, fast-paced environments. High staff turnover is a reality in this sector, so the UI must be "pick-up-and-play" intuitive, requiring minimal training.
+
+Our core values are **Privacy, Dignity, and Compliance**. We adhere strictly to the **FY 2026 HUD HMIS Data Standards** (effective Oct 2025). This means we've moved away from outdated demographic collection—specifically noting the removal of "Gender" as a standalone category in favor of the current "Sex" and "Gender Identity" requirements—ensuring data is collected with trauma-informed sensitivity.
+
+Finally, we recognize that shelter work happens in real-time. This system prioritizes a "Bed Board" that functions as the heartbeat of the app, providing instant visibility into capacity to ensure no one is turned away due to bad data.
+
+---
+
+## 2. Recommended Tech Stack & Why
+
+* **Frontend:** **React (with Vite)** + **Tailwind CSS**. React offers a component-based architecture perfect for reusable forms; Tailwind ensures the UI is responsive and lightweight for mobile browsers.
+* **Backend:** **Node.js (Express)** or **Supabase (BaaS)**. For a low-budget nonprofit, Supabase is the "Goldilocks" choice: it provides a PostgreSQL database, built-in Auth, and instant Realtime listeners for bed updates with zero DevOps overhead.
+* **Database:** **PostgreSQL**. The relational nature of HUD data (Clients linked to Households linked to Enrollments) requires the strict schema and ACID compliance of Postgres.
+* **Auth & Realtime:** **Supabase Auth** (Role-Based Access Control) + **Postgres Changes**. This allows the Bed Board to update automatically when a client is checked in by another staff member.
+* **Deployment:** **Vercel** (Frontend) + **Supabase** (Database/Backend). Both offer generous free tiers and "Pro" tiers starting at $20/mo, making this extremely budget-friendly.
+
+---
+
+## 3. Core Data Model (Entities & Relationships)
+
+The data model follows a relational flow to maintain historical records while tracking current stays.
+
+**Key Entities:**
+
+* **Clients:** Name, DOB, SSN (Encrypted), Race, Ethnicity, Sex (FY26 Standard).
+* **Households:** A grouping entity to link clients (Primary Applicant + Members).
+* **Enrollments:** Maps a Client to a Project. Stores "Entry Date," "Exit Date," and "Disability Status."
+* **Bed_Inventory:** Physical units/beds available in the shelter.
+* **Bed_Assignments:** Links an Enrollment to a specific Bed for a specific duration.
+* **Services:** Tracked events (e.g., "Bus Pass," "Case Management Session").
+
+**Relationship Logic:**
+`Client` (1) — (N) `Enrollment` (1) — (1) `Bed_Assignment`
+`Household` (1) — (N) `Client`
+
+---
+
+## 4. Essential Modules & Detailed Specs
+
+### Module 1: Dashboard & Real-Time Bed Board
+
+* **Purpose:** Provide an instant snapshot of shelter capacity and today's expected check-ins/outs.
+* **Key HUD Data:** Project Type (Emergency Shelter), Bed Type (Emergency).
+* **Workflow:** 1. Staff opens app → 2. Views "Available Beds" card → 3. Taps a bed to see occupant details or assign a new client.
+* **Mobile UI/UX:** Grid view of beds. Green = Empty, Red = Occupied. Large "Quick Check-in" button.
+* **Edge Case:** Client walks in at 2 AM; staff needs to assign a bed immediately without completing a full 20-page intake. (Solution: Allow "Partial Intake" saved as a draft).
+
+### Module 2: Search & Global Intake
+
+* **Purpose:** Prevent duplicate records and collect Universal Data Elements (UDEs).
+* **Key HUD Data:** Name, DOB, SSN (last 4), Race, Ethnicity, Veteran Status.
+* **Workflow:** 1. Search by Name/DOB → 2. If no match, "Create New" → 3. Collect HUD UDEs.
+* **Mobile UI/UX:** Single-column form. Use native date pickers for DOB.
+* **Edge Case:** Client has a common name. (Solution: System displays DOB and Last 4 of SSN in search results to differentiate).
+
+### Module 3: Household Management
+
+* **Purpose:** Grouping family members together for a single enrollment.
+* **Key HUD Data:** Relationship to Head of Household (HoH).
+* **Workflow:** 1. Select HoH → 2. Search/Add members → 3. Define relationships.
+* **Mobile UI/UX:** "Family Tree" style list with "Add Member" icon.
+* **Edge Case:** Household members arrive on different nights. (Solution: Allow adding members to an existing "Active" household enrollment).
+
+### Module 4: Enrollment & Entry Assessment
+
+* **Purpose:** Capture the "snapshot" of a client's life upon entry (HUD Requirement).
+* **Key HUD Data:** Prior Living Situation, Length of Stay in Previous Place, Disabling Condition.
+* **Workflow:** 1. Start Enrollment → 2. Answer HUD-required questions → 3. Select Project.
+* **Mobile UI/UX:** Progress bar at the top; "Save & Continue Later" button is prominent.
+* **Edge Case:** Client is fleeing domestic violence. (Solution: Trigger "Privacy Flag" which hides location details and restricts record visibility).
+
+### Module 5: Bed & Unit Inventory
+
+* **Purpose:** Manage the physical layout of the shelter (Rooms, Bunks, Mats).
+* **Key Data:** Unit Name, Bed Number, Availability Status, Gender-specific designation (if applicable).
+* **Workflow:** 1. Admin creates Room → 2. Adds Bunks → 3. Marks bed as "Out of Service" for maintenance.
+* **Mobile UI/UX:** Toggle switches for "Active/Inactive" status.
+* **Edge Case:** A bed is broken. (Solution: Mark as "Maintenance" to remove from available count without deleting the record).
+
+### Module 6: Service Entry & Case Notes
+
+* **Purpose:** Track non-housing support provided to clients.
+* **Key HUD Data:** Service Date, Service Type (e.g., Financial, Health, Food).
+* **Workflow:** 1. Select Client → 2. Select Service Type → 3. Add timestamped Case Note.
+* **Mobile UI/UX:** Voice-to-text enabled text areas for case notes.
+* **Edge Case:** Staff needs to record a service for a whole family. (Solution: "Bulk Apply" checkbox for all household members).
+
+### Module 7: Exit Assessment
+
+* **Purpose:** Capture outcomes to measure shelter performance.
+* **Key HUD Data:** Exit Date, Destination (e.g., Rental with Subsidy, Street), Reason for Leaving.
+* **Workflow:** 1. Select Active Enrollment → 2. Enter Exit Date → 3. Select Destination from HUD dropdown.
+* **Mobile UI/UX:** Dropdown menus optimized for thumb-tapping.
+* **Edge Case:** Client disappears (no-show). (Solution: "Data Not Collected" option for Destination per HUD standards).
+
+### Module 8: Consent & Privacy Tracking
+
+* **Purpose:** Manage ROI (Release of Information) and HIPAA/HUD privacy compliance.
+* **Key Data:** Consent Granted (Y/N), Start Date, Expiration Date.
+* **Workflow:** 1. Present digital ROI to client → 2. Client signs (stylus/finger) → 3. System unlocks record for sharing.
+* **Mobile UI/UX:** Digital signature pad component.
+* **Edge Case:** Client withdraws consent. (Solution: Immediate "Global Lock" on record, making it viewable only by the creating agency).
+
+---
+
+## 5. Page-by-Page UI Structure (Mobile-First)
+
+* `/dashboard`: High-level metrics (Total Beds, Occupancy %, Today's In/Out).
+* `/clients`: Searchable list with "Add New" FAB (Floating Action Button).
+* `/clients/:id`: Profile view with tabs for (Info, Enrollments, Services, Files).
+* `/bed-board`: Visual map of the shelter. Red/Green color coding.
+* `/reports`: Simple buttons to export "Daily Roster" or "HUD APR" (CSV/PDF).
+* `/settings`: User profile, Dark Mode toggle, Agency info.
+
+---
+
+## 6. Security, Privacy & Compliance Notes
+
+* **Encryption:** All PII (SSNs, DOBs) must be encrypted at rest using AES-256. Supabase handles transit encryption via SSL/TLS.
+* **FY 2026 Audit:** Maintain an `audit_log` table that records every "View" and "Edit" action with a timestamp and UserID.
+* **Role-Based Access (RBAC):** - *Admin:* Full access + User management.
+* *Staff:* Intake, Bed assignments, Case notes.
+* *Volunteer:* View-only bed board, check-in/out only.
+
+
+* **Data Minimization:** If your project doesn't require SSNs for funding, don't collect them. Use a "Client ID" instead.
+
+---
+
+## 7. Phased Development Roadmap
+
+### MVP (Weeks 1–4)
+
+* Client Search & Basic Intake (UDEs).
+* Real-time Bed Board (Check-in/Check-out).
+* Role-based Login.
+
+### Phase 2 (Weeks 5–8)
+
+* Household Grouping.
+* HUD Exit Assessments.
+* Digital ROI / Consent signatures.
+* Basic CSV Exports for HUD reporting.
+
+### Phase 3 (Future)
+
+* Offline mode (Service Workers) for field work.
+* Automated SMS reminders for case management appointments.
+* Advanced Data Visualizations (Trends in homelessness).
+
+---
+
+## 8. Starter Code Structure Outline
+
+### Folder Structure
+
+```text
+/src
+  /components
+    BedCard.jsx
+    IntakeForm.jsx
+    SignaturePad.jsx
+  /pages
+    Dashboard.jsx
+    ClientProfile.jsx
+    BedBoard.jsx
+  /hooks
+    useRealtimeBeds.js
+  /lib
+    supabaseClient.js
+    hudConstants.js (FY2026 dropdown values)
+
+```
+
+### Sample Schema (SQL)
+
+```sql
+-- Client Table
+CREATE TABLE clients (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  first_name TEXT NOT NULL,
+  last_name TEXT NOT NULL,
+  dob DATE,
+  sex TEXT, -- FY2026 Standard
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Enrollment Table
+CREATE TABLE enrollments (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  client_id UUID REFERENCES clients(id),
+  entry_date DATE NOT NULL,
+  exit_date DATE,
+  living_situation_prior INTEGER, -- HUD code
+  is_active BOOLEAN DEFAULT TRUE
+);
+
+```
+
+### Example Component: Realtime Bed Card
+
+```javascript
+import { useEffect, useState } from 'react';
+import { supabase } from '../lib/supabaseClient';
+
+export function BedCard({ bedId, initialStatus }) {
+  const [status, setStatus] = useState(initialStatus);
+
+  useEffect(() => {
+    const subscription = supabase
+      .channel('bed-updates')
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'beds', filter: `id=eq.${bedId}` }, 
+      payload => {
+        setStatus(payload.new.status);
+      })
+      .subscribe();
+
+    return () => supabase.removeChannel(subscription);
+  }, [bedId]);
+
+  return (
+    <div className={`p-4 rounded-lg shadow ${status === 'occupied' ? 'bg-red-100' : 'bg-green-100'}`}>
+      <h3 className="font-bold">Bed {bedId}</h3>
+      <p className="text-sm">{status.toUpperCase()}</p>
+    </div>
+  );
+}
+
+```
