@@ -18,7 +18,7 @@ Reduce administrative burden on front-line shelter staff through an intuitive, m
 
 - **Frontend**: React 18 + Vite + Tailwind CSS
 - **Backend**: Supabase (PostgreSQL + Auth + Realtime)
-- **Deployment**: Vercel (Frontend) + Supabase (Database)
+- **Deployment**: Github Pages (Frontend) + Supabase (Database)
 
 ## 📋 Prerequisites
 
