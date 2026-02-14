@@ -13,24 +13,46 @@ export default function ClientDashboard() {
     const [loadingClient, setLoadingClient] = useState(true);
 
     useEffect(() => {
+        let mounted = true;
+
         async function fetchClientRecord() {
             if (!user) return;
             try {
-                const { data, error } = await supabase
+                // Create a timeout promise
+                const timeoutPromise = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('Client fetch timeout')), 10000)
+                );
+
+                const dataPromise = supabase
                     .from('clients')
                     .select('*')
                     .eq('user_id', user.id)
                     .single();
 
+                const { data, error } = await Promise.race([
+                    dataPromise,
+                    timeoutPromise
+                ]);
+
+                if (!mounted) return;
+
                 if (error && error.code !== 'PGRST116') { // PGRST116 is 'Row not found'
                     console.error('Error fetching client record:', error);
+                    // On error, maybe we should set clientRecord to null? default is null.
                 }
                 setClientRecord(data);
+            } catch (err) {
+                console.error('Client record fetch failed:', err);
             } finally {
-                setLoadingClient(false);
+                if (mounted) setLoadingClient(false);
             }
         }
+
         fetchClientRecord();
+
+        return () => {
+            mounted = false;
+        };
     }, [user]);
 
     if (bedsLoading || loadingClient) {

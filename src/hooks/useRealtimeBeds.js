@@ -10,9 +10,9 @@ export const useRealtimeBeds = () => {
         // Fetch initial bed data
         const fetchBeds = async () => {
             try {
-                // Create a timeout promise (increased to 60s to handle slow connections/large data)
+                // Create a timeout promise (reduced to 10s to prevent UI blocking)
                 const timeoutPromise = new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error('Data fetch timeout')), 60000)
+                    setTimeout(() => reject(new Error('Data fetch timeout')), 10000)
                 );
 
                 const { data, error } = await Promise.race([

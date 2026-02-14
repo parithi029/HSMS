@@ -28,15 +28,30 @@ export const getCurrentUser = async () => {
 };
 
 // Get user profile with role
-export const getUserProfile = async (userId) => {
-    const { data, error } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
+// Get user profile with role and timeout
+export const getUserProfile = async (userId, timeout = 5000) => {
+    try {
+        // Create a timeout promise
+        const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Profile fetch timeout')), timeout)
+        );
 
-    if (error) throw error;
-    return data;
+        // Race between the actual fetch and the timeout
+        const { data, error } = await Promise.race([
+            supabase
+                .from('user_profiles')
+                .select('*')
+                .eq('id', userId)
+                .single(),
+            timeoutPromise
+        ]);
+
+        if (error) throw error;
+        return data;
+    } catch (error) {
+        console.error("Error fetching user profile:", error);
+        return null; // Fail gracefully
+    }
 };
 
 // Check user role

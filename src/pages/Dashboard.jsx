@@ -14,7 +14,8 @@ export default function Dashboard() {
     const { activities, loading: activityLoading } = useDashboardActivity();
     const [showQuickCheckIn, setShowQuickCheckIn] = useState(false);
 
-    if (authLoading || bedsLoading) {
+    // Only block for authLoading, let bed data load in background
+    if (authLoading) {
         return (
             <div className="flex items-center justify-center min-h-[50vh]">
                 <div className="text-center">
